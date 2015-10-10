@@ -20,16 +20,31 @@ class HibernateProperties(connectionUrl: String? = null) {
     operator fun get(key: String): String = javaProperties[key] as String
 }
 
-class StringPropertyDelegate(private val key: String) {
-    operator fun get(hibernateProperties: HibernateProperties, propertyMetadata: PropertyMetadata): String?
-            = hibernateProperties.javaProperties[key] as String?
 
-    operator fun set(hibernateProperties: HibernateProperties, propertyMetadata: PropertyMetadata, value: String?) {
+abstract class PropertyDelegate<T : Any>(private val key: String) {
+    operator fun get(hibernateProperties: HibernateProperties, propertyMetadata: PropertyMetadata): T? {
+        if (key !in hibernateProperties.javaProperties) {
+            return null
+        }
+        return fromString(hibernateProperties.javaProperties[key] as String)
+    }
+
+    operator fun set(hibernateProperties: HibernateProperties, propertyMetadata: PropertyMetadata, value: T?) {
         if (value == null) {
             hibernateProperties.javaProperties.remove(key)
         } else {
-            hibernateProperties.javaProperties[key] = value
+            hibernateProperties.javaProperties[key] = toString(value)
         }
     }
+
+    protected abstract fun fromString(value: String): T
+
+    protected abstract fun toString(value: T): String
+}
+
+class StringPropertyDelegate(key: String) : PropertyDelegate<String>(key) {
+    override fun fromString(value: String): String = value
+
+    override fun toString(value: String): String = value
 }
 
