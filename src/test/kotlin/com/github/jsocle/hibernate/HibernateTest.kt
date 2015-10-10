@@ -8,7 +8,7 @@ class HibernateTest {
     @Test
     fun test() {
         val db = Hibernate(
-                HibernateProperties(connectionUrl = "jdbc:h2:mem:test-jooq-tools", hbm2ddlAuto = Hbm2ddlAuto.Create),
+                HibernateProperties(connectionUrl = "jdbc:h2:mem:jsocle-hibernate", hbm2ddlAuto = Hbm2ddlAuto.Create),
                 listOf(User::class)
         )
 
