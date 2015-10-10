@@ -31,4 +31,13 @@ class HibernatePropertiesTest {
         properties.connectionUrl = null
         Assert.assertNull(properties.connectionUrl)
     }
+
+    @Test
+    fun testEnumPropertyDelegate() {
+        val properties = HibernateProperties()
+        Assert.assertNull(properties.hbm2ddlAuto)
+        properties.hbm2ddlAuto = Hbm2ddlAuto.CreateDrop
+        Assert.assertEquals(Hbm2ddlAuto.CreateDrop, properties.hbm2ddlAuto)
+        Assert.assertEquals(mapOf(AvailableSettings.HBM2DDL_AUTO to "create-drop"), properties.javaProperties)
+    }
 }

@@ -3,13 +3,15 @@ package com.github.jsocle.hibernate
 import org.hibernate.cfg.AvailableSettings
 import java.util.*
 
-class HibernateProperties(connectionUrl: String? = null) {
+class HibernateProperties(connectionUrl: String? = null, hbm2ddlAuto: Hbm2ddlAuto? = null) {
     val javaProperties = Properties()
 
     var connectionUrl by StringPropertyDelegate(AvailableSettings.URL)
+    var hbm2ddlAuto by EnumPropertyDelegate(AvailableSettings.HBM2DDL_AUTO, Hbm2ddlAuto.values())
 
     init {
         this.connectionUrl = connectionUrl
+        this.hbm2ddlAuto = hbm2ddlAuto
     }
 
     operator
@@ -48,3 +50,18 @@ class StringPropertyDelegate(key: String) : PropertyDelegate<String>(key) {
     override fun toString(value: String): String = value
 }
 
+class EnumPropertyDelegate<T : ValueEnum>(key: String, private val values: Array<T>) : PropertyDelegate<T>(key) {
+    override fun fromString(value: String): T = values.find { it.value == value }!!
+
+    override fun toString(value: T): String {
+        return value.value
+    }
+}
+
+interface ValueEnum {
+    val value: String
+}
+
+enum class Hbm2ddlAuto(override val value: String) : ValueEnum {
+    Update("update"), Create("create"), CreateDrop("create-drop"), Validate("validate")
+}
