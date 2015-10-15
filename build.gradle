@@ -23,7 +23,7 @@ dependencies {
     testCompile 'com.h2database:h2:1.4.189'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile 'com.github.jsocle:jsocle:0.0.6'
+    compile 'com.github.jsocle:jsocle:0.0.8'
     compile 'org.hibernate:hibernate-core:5.0.2.Final'
 }
 

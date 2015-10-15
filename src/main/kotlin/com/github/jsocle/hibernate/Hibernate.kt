@@ -1,30 +1,68 @@
 package com.github.jsocle.hibernate
 
+import com.github.jsocle.JSocle
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
+import org.hibernate.internal.AbstractSessionImpl
+import kotlin.concurrent.getOrSet
 import kotlin.reflect.KClass
 
-class Hibernate(public val properties: HibernateProperties = HibernateProperties(),
+class Hibernate(private val app: JSocle, public val properties: HibernateProperties = HibernateProperties(),
                 classes: List<KClass<*>> = listOf()) {
     public val classes = arrayListOf<KClass<*>>() apply { this.addAll(classes) }
 
-    private val sessionFactory: SessionFactory by lazy(LazyThreadSafetyMode.NONE) {
+    internal val sessionFactory: SessionFactory by lazy(LazyThreadSafetyMode.NONE) {
         Configuration()
                 .addProperties(properties.javaProperties)
                 .apply { this@Hibernate.classes.forEach { addAnnotatedClass(it.java) } }
                 .buildSessionFactory()
     }
 
+    private val requestLocalSession = ThreadLocal<Session>()
+
     public val session: Session
-        get() = sessionFactory.openSession()
+        get() = requestLocalSession.getOrSet { sessionFactory.openSession() }
+
+    init {
+        app.addOnBeforeFirstRequest { initialize() }
+        app.addTeardownRequest { closeSession() }
+    }
 
     fun session<T>(intent: (session: Session) -> T): T {
         val session = sessionFactory.openSession()
         try {
             return intent(session)
         } finally {
-            session.close()
+            session.finalize()
         }
     }
+
+    private fun initialize() {
+        // initialize and test db connection
+        session { session ->
+            assert(2 == session.createSQLQuery("SELECT 1 + 1 FROM DUAL").setMaxResults(1).uniqueResult())
+        }
+    }
+
+    private fun closeSession() {
+        val session = requestLocalSession.get()
+        if (session != null) {
+            requestLocalSession.remove()
+            session.finalize()
+        }
+    }
+}
+
+val Session.isClosed: Boolean
+    get() = (this as AbstractSessionImpl).isClosed
+
+fun Session.finalize() {
+    if (isClosed) {
+        return
+    }
+    if (transaction.status.canRollback()) {
+        transaction.rollback()
+    }
+    close()
 }
