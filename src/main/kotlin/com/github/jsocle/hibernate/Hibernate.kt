@@ -1,6 +1,7 @@
 package com.github.jsocle.hibernate
 
 import com.github.jsocle.JSocle
+import org.hibernate.Criteria
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
@@ -54,10 +55,10 @@ class Hibernate(private val app: JSocle, public val properties: HibernatePropert
     }
 }
 
-val Session.isClosed: Boolean
+private val Session.isClosed: Boolean
     get() = (this as AbstractSessionImpl).isClosed
 
-fun Session.finalize() {
+private fun Session.finalize() {
     if (isClosed) {
         return
     }
@@ -65,4 +66,12 @@ fun Session.finalize() {
         transaction.rollback()
     }
     close()
+}
+
+fun Session.createCriteria<T : Any>(klass: KClass<T>): Criteria {
+    return createCriteria(klass.java)
+}
+
+fun Session.commit() {
+    transaction.commit()
 }
