@@ -23,10 +23,19 @@ dependencies {
     testCompile 'com.h2database:h2:1.4.189'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile 'com.github.jsocle:jsocle:0.0.8'
+    compile 'com.github.jsocle:jsocle:0.0.9'
     compile 'org.hibernate:hibernate-core:5.0.2.Final'
 }
 
 sourceSets {
     main.java.srcDirs += 'src/main/kotlin'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
 }

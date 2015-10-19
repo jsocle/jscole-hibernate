@@ -27,7 +27,7 @@ class Hibernate(private val app: JSocle, public val properties: HibernatePropert
 
     init {
         app.addOnBeforeFirstRequest { initialize() }
-        app.addTeardownRequest { closeSession() }
+        app.addOnTeardownRequest { closeSession() }
     }
 
     fun session<T>(intent: (session: Session) -> T): T {
