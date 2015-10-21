@@ -99,4 +99,27 @@ class HibernateTest {
 
         app.client.get("/")
     }
+
+    @Test
+    fun reloadSessionFactory() {
+        val app = object : JSocle() {
+            val db = Hibernate(
+                    this,
+                    HibernateProperties(connectionUrl = "jdbc:h2:mem:jsocle-hibernate-test-jsocle-implement", hbm2ddlAuto = Hbm2ddlAuto.Create),
+                    listOf(User::class)
+            )
+        }
+
+        app.db.sessionFactory.statistics.isStatisticsEnabled = true;
+
+        Assert.assertEquals(0, app.db.sessionFactory.statistics.sessionOpenCount);
+        Assert.assertEquals(0, app.db.sessionFactory.statistics.sessionCloseCount);
+        app.db.session {}
+        Assert.assertEquals(1, app.db.sessionFactory.statistics.sessionOpenCount);
+        Assert.assertEquals(1, app.db.sessionFactory.statistics.sessionCloseCount);
+
+        app.db.reload()
+        Assert.assertEquals(0, app.db.sessionFactory.statistics.sessionOpenCount);
+        Assert.assertEquals(0, app.db.sessionFactory.statistics.sessionCloseCount);
+    }
 }

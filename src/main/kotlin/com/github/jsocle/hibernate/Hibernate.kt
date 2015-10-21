@@ -13,12 +13,18 @@ class Hibernate(private val app: JSocle, public val properties: HibernatePropert
                 classes: List<KClass<*>> = listOf()) {
     public val classes = arrayListOf<KClass<*>>() apply { this.addAll(classes) }
 
-    internal val sessionFactory: SessionFactory by lazy(LazyThreadSafetyMode.NONE) {
-        Configuration()
-                .addProperties(properties.javaProperties)
-                .apply { this@Hibernate.classes.forEach { addAnnotatedClass(it.java) } }
-                .buildSessionFactory()
-    }
+    public var _sessionFactory: SessionFactory? = null
+
+    internal val sessionFactory: SessionFactory
+        get() {
+            if (_sessionFactory == null) {
+                _sessionFactory = Configuration()
+                        .addProperties(properties.javaProperties)
+                        .apply { this@Hibernate.classes.forEach { addAnnotatedClass(it.java) } }
+                        .buildSessionFactory()
+            }
+            return _sessionFactory!!
+        }
 
     private val requestLocalSession = ThreadLocal<Session>()
 
@@ -52,6 +58,14 @@ class Hibernate(private val app: JSocle, public val properties: HibernatePropert
             requestLocalSession.remove()
             session.finalize()
         }
+    }
+
+    fun reload() {
+        if (_sessionFactory != null) {
+            _sessionFactory!!.close()
+        }
+        _sessionFactory = null
+        initialize()
     }
 }
 
