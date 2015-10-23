@@ -2,12 +2,13 @@ package com.github.jsocle.hibernate
 
 import org.hibernate.cfg.AvailableSettings
 import java.util.*
+import kotlin.reflect.KProperty
 
 class HibernateProperties(connectionUrl: String? = null, hbm2ddlAuto: Hbm2ddlAuto? = null) {
     val javaProperties = Properties()
 
     var connectionUrl by StringPropertyDelegate(AvailableSettings.URL)
-    var hbm2ddlAuto by EnumPropertyDelegate(AvailableSettings.HBM2DDL_AUTO, Hbm2ddlAuto.values())
+    var hbm2ddlAuto by EnumPropertyDelegate(AvailableSettings.HBM2DDL_AUTO, Hbm2ddlAuto.values)
 
     init {
         this.connectionUrl = connectionUrl
@@ -24,14 +25,14 @@ class HibernateProperties(connectionUrl: String? = null, hbm2ddlAuto: Hbm2ddlAut
 
 
 abstract class PropertyDelegate<T : Any>(private val key: String) {
-    operator fun get(hibernateProperties: HibernateProperties, propertyMetadata: PropertyMetadata): T? {
-        if (key !in hibernateProperties.javaProperties) {
+    operator fun getValue(hibernateProperties: HibernateProperties, propertyMetadata: KProperty<*>): T? {
+        if (hibernateProperties.javaProperties[key] == null) {
             return null
         }
         return fromString(hibernateProperties.javaProperties[key] as String)
     }
 
-    operator fun set(hibernateProperties: HibernateProperties, propertyMetadata: PropertyMetadata, value: T?) {
+    operator fun setValue(hibernateProperties: HibernateProperties, propertyMetadata: KProperty<*>, value: T?) {
         if (value == null) {
             hibernateProperties.javaProperties.remove(key)
         } else {

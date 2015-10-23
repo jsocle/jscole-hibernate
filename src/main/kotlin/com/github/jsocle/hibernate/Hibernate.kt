@@ -11,7 +11,7 @@ import kotlin.reflect.KClass
 
 class Hibernate(private val app: JSocle, public val properties: HibernateProperties = HibernateProperties(),
                 classes: List<KClass<*>> = listOf()) {
-    public val classes = arrayListOf<KClass<*>>() apply { this.addAll(classes) }
+    public val classes = arrayListOf<KClass<*>>().apply { this.addAll(classes) }
 
     public var _sessionFactory: SessionFactory? = null
 
@@ -36,7 +36,7 @@ class Hibernate(private val app: JSocle, public val properties: HibernatePropert
         app.addOnTeardownRequest { closeSession() }
     }
 
-    fun session<T>(intent: (session: Session) -> T): T {
+    fun <T> session(intent: (session: Session) -> T): T {
         val session = sessionFactory.openSession()
         try {
             return intent(session)
@@ -82,7 +82,7 @@ private fun Session.finalize() {
     close()
 }
 
-fun Session.createCriteria<T : Any>(klass: KClass<T>): Criteria {
+fun <T : Any> Session.createCriteria(klass: KClass<T>): Criteria {
     return createCriteria(klass.java)
 }
 
